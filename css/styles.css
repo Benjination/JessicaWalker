@@ -588,42 +588,16 @@ body {
     color: var(--text-light);
 }
 
-.certifications {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: var(--light-lavender);
-    border-radius: 15px;
-}
-
-.certifications h4 {
-    color: var(--primary-pink);
-    margin-bottom: 1rem;
-    font-family: var(--font-script);
-    font-size: 1.3rem;
-}
-
-.certifications ul {
-    list-style: none;
-    padding: 0;
-}
-
-.certifications li {
-    margin-bottom: 0.8rem;
+.about-right {
     display: flex;
+    flex-direction: column;
+    gap: 2rem;
     align-items: center;
-    gap: 10px;
-    color: var(--text-dark);
-}
-
-.certifications i {
-    color: var(--primary-lavender);
-    width: 20px;
 }
 
 .about-image {
-    display: flex;
-    justify-content: center;
     position: relative;
+    display: inline-block;
 }
 
 .profile-image {
@@ -633,6 +607,7 @@ body {
     border-radius: 20px;
     box-shadow: var(--shadow-medium);
     transition: var(--transition-smooth);
+    border: 3px solid var(--light-lavender);
 }
 
 .profile-image:hover {
@@ -640,20 +615,109 @@ body {
     box-shadow: var(--shadow-strong);
 }
 
-.image-accent {
+.butterfly-frame {
     position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 100px;
-    height: 100px;
-    opacity: 0.7;
-    animation: flutter 4s ease-in-out infinite;
+    top: -30px;
+    left: -30px;
+    width: 80px;
+    height: 80px;
+    z-index: 2;
 }
 
-.butterfly-accent-img {
+.butterfly-decoration {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    animation: flutter 6s ease-in-out infinite;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+}
+
+.certifications-card {
+    background: linear-gradient(135deg, var(--light-lavender) 0%, rgba(230, 216, 255, 0.8) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid rgba(147, 112, 219, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.certifications-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100px;
+    height: 100px;
+    background: url('../Images/Butterfly3.png') no-repeat center;
+    background-size: contain;
+    opacity: 0.1;
+    transform: rotate(15deg);
+}
+
+.cert-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-lavender);
+}
+
+.cert-icon {
+    color: var(--primary-pink);
+    font-size: 1.5rem;
+}
+
+.cert-header h4 {
+    color: var(--primary-pink);
+    margin: 0;
+    font-family: var(--font-script);
+    font-size: 1.4rem;
+}
+
+.cert-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.cert-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-lavender);
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.cert-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-light);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.cert-item i {
+    color: var(--primary-lavender);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.cert-item span {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.cert-item small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+    font-style: italic;
 }
 
 /* ==========================================
@@ -1442,6 +1506,40 @@ body {
         height: 300px;
     }
     
+    .butterfly-frame {
+        top: -20px;
+        left: -20px;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .certifications-card {
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        max-width: 100%;
+    }
+    
+    .cert-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.8rem;
+    }
+    
+    .cert-header h4 {
+        font-size: 1.2rem;
+    }
+    
+    .cert-grid {
+        gap: 1rem;
+    }
+    
+    .cert-item {
+        padding: 0.8rem;
+    }
+    
+    .cert-item span {
+        font-size: 0.9rem;
+    }
+    
     .contact-form {
         padding: 2.5rem;
     }
@@ -1610,6 +1708,41 @@ body {
     .profile-image {
         width: 250px;
         height: 250px;
+    }
+    
+    .butterfly-frame {
+        top: -15px;
+        left: -15px;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .certifications-card {
+        padding: 1.2rem;
+        margin-top: 1rem;
+    }
+    
+    .cert-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .cert-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .cert-item {
+        padding: 0.7rem;
+    }
+    
+    .cert-item span {
+        font-size: 0.85rem;
+    }
+    
+    .cert-item small {
+        font-size: 0.75rem;
     }
     
     .experience-photo {
