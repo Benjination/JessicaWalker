@@ -1433,7 +1433,7 @@ body {
     .hero {
         flex-direction: column;
         text-align: center;
-        padding: 160px 20px 60px; /* Increased from 120px to 160px for navbar offset */
+        padding: 200px 20px 60px; /* Increased from 160px to 200px for better navbar clearance */
         min-height: 100vh;
     }
     
@@ -1655,7 +1655,7 @@ body {
 /* Small Phones */
 @media screen and (max-width: 480px) {
     .hero {
-        padding: 140px 15px 50px; /* Increased from 100px to 140px for navbar offset */
+        padding: 180px 15px 50px; /* Increased from 140px to 180px for better navbar clearance */
     }
     
     .hero-background {
