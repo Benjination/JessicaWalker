@@ -496,7 +496,14 @@ body {
     cursor: default;
     transition: all 0.3s ease;
     position: relative;
-    display: inline-block;
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    line-height: inherit;
 }
 
 .secret-w:hover {
@@ -1604,7 +1611,6 @@ body {
     
     /* Mobile Secret W Styles */
     .secret-w {
-        padding: 2px 4px;
         border-radius: 3px;
     }
     
