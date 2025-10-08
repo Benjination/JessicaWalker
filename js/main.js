@@ -13,6 +13,25 @@ const config = {
 };
 
 // ==========================================
+// IMAGE PATTERNS CONFIGURATION
+// ==========================================
+// Configure available images for blog posts
+// To add new images:
+// 1. Add image file(s) to the Images folder
+// 2. Add corresponding pattern below
+// 3. Save and refresh - images will appear automatically in blog editor
+const imagePatterns = [
+    // Jessica's professional photos
+    { prefix: 'Jessica', count: 5, extension: 'png' },
+    // Butterfly decorative images
+    { prefix: 'Butterfly', count: 4, extension: 'png' },
+    // Girly background elements
+    { prefix: 'Girly', count: 3, extension: 'png' },
+    // Additional custom images (add new patterns here)
+    { prefix: 'StarCrystals', count: 1, extension: 'png' }
+];
+
+// ==========================================
 // DOM CONTENT LOADED EVENT
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -640,6 +659,23 @@ window.JessicaWalkerSite = {
 // BLOG MANAGEMENT SYSTEM
 // ==========================================
 
+/*
+ * Image Management Instructions:
+ * 
+ * To add new images to the blog system:
+ * 1. Add your image file to the Images/ folder
+ * 2. Update the imagePatterns array at the top of this file (around line 15)
+ * 3. For single images: { prefix: 'ImageName', count: 1, extension: 'png' }
+ * 4. For numbered series: { prefix: 'Series', count: 5, extension: 'png' }
+ * 5. Commit and push your changes
+ * 
+ * The system will automatically:
+ * - Generate the dropdown options
+ * - Format names nicely (StarCrystals becomes "Star Crystals")
+ * - Sort alphabetically
+ * - Validate image availability
+ */
+
 class BlogManager {
     constructor() {
         this.isAuthenticated = false;
@@ -891,14 +927,26 @@ class BlogManager {
 
     async loadAvailableImages() {
         try {
-            // Get list of images from the Images folder
-            // Since we can't directly access the file system, we'll maintain a list
-            this.availableImages = [
-                'Butterfly1.png', 'Butterfly2.png', 'Butterfly3.png', 'Butterfly4.png',
-                'Girly1.png', 'Girly2.png', 'Girly3.png',
-                'Jessica1.png', 'Jessica2.png', 'Jessica3.png', 'Jessica4.png', 'Jessica5.png'
-            ];
+            // Dynamic image detection system using global imagePatterns configuration
+            // Build image list from patterns
+            this.availableImages = [];
+            
+            for (const pattern of imagePatterns) {
+                if (pattern.count === 1) {
+                    // Single image (like StarCrystals.png)
+                    this.availableImages.push(`${pattern.prefix}.${pattern.extension}`);
+                } else {
+                    // Numbered series (like Jessica1.png, Jessica2.png, etc.)
+                    for (let i = 1; i <= pattern.count; i++) {
+                        this.availableImages.push(`${pattern.prefix}${i}.${pattern.extension}`);
+                    }
+                }
+            }
 
+            // Sort alphabetically for better organization
+            this.availableImages.sort();
+
+            console.log('Available images loaded:', this.availableImages);
             this.updateImageSelect();
         } catch (error) {
             console.error('Error loading available images:', error);
@@ -914,13 +962,37 @@ class BlogManager {
             imageSelect.removeChild(imageSelect.lastChild);
         }
 
-        // Add available images
+        // Add available images with validation
         this.availableImages.forEach(image => {
             const option = document.createElement('option');
             option.value = image;
-            option.textContent = image;
+            option.textContent = this.formatImageName(image);
             imageSelect.appendChild(option);
         });
+    }
+
+    // Helper method to format image names for display
+    formatImageName(filename) {
+        // Remove extension and format nicely
+        const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+        
+        // Add spaces before numbers and capitalize
+        const formatted = nameWithoutExt
+            .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space before capitals
+            .replace(/([a-z])(\d)/g, '$1 $2')   // Add space before numbers
+            .replace(/^./, str => str.toUpperCase()); // Capitalize first letter
+        
+        return formatted;
+    }
+
+    // Helper method to easily add new images to the system
+    addCustomImage(filename) {
+        if (!this.availableImages.includes(filename)) {
+            this.availableImages.push(filename);
+            this.availableImages.sort();
+            this.updateImageSelect();
+            console.log(`Added new image: ${filename}`);
+        }
     }
 
     // Show blog management modal (called after successful auth)
