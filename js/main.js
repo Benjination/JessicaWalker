@@ -164,6 +164,12 @@ function initializeScrollAnimations() {
 function initializeContactForm() {
     const contactForm = document.getElementById('contact-form');
     
+    // Safety check - only initialize if form exists
+    if (!contactForm) {
+        console.log('Contact form not found - skipping initialization');
+        return;
+    }
+    
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -250,48 +256,125 @@ function submitContactForm(data) {
 // AUTH MODAL FUNCTIONALITY
 // ==========================================
 function initializeAuthModal() {
-    const authBtn = document.getElementById('auth-btn');
+    const secretStar = document.querySelector('.secret-star');
     const authModal = document.getElementById('auth-modal');
+    const authForm = document.getElementById('auth-form');
+    const authMessage = document.getElementById('auth-message');
+    
+    // Safety check - only initialize if elements exist
+    if (!secretStar || !authModal) {
+        console.log('Auth modal elements not found - skipping initialization');
+        return;
+    }
+    
     const closeBtn = authModal.querySelector('.close');
     
-    authBtn.addEventListener('click', (e) => {
+    if (!closeBtn) {
+        console.log('Auth modal close button not found - skipping initialization');
+        return;
+    }
+
+    // Secret star click handler
+    secretStar.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent triggering the main button
         authModal.style.display = 'block';
         document.body.style.overflow = 'hidden';
+        console.log('Secret access portal opened');
     });
     
+    // Close modal handlers
     closeBtn.addEventListener('click', () => {
         authModal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        resetAuthForm();
     });
     
     window.addEventListener('click', (e) => {
         if (e.target === authModal) {
             authModal.style.display = 'none';
             document.body.style.overflow = 'auto';
+            resetAuthForm();
         }
     });
-    
-    // TODO: Implement Firebase Auth
-    initializeFirebaseAuth();
-}
 
-function initializeFirebaseAuth() {
-    // Placeholder for Firebase Auth implementation
-    console.log('Firebase Auth will be implemented here');
-    
-    // Example structure for Firebase Auth:
-    /*
-    import { initializeApp } from 'firebase/app';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-    
-    const firebaseConfig = {
-        // Your config
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    */
+    // Auth form submission
+    if (authForm) {
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const submitBtn = document.querySelector('.auth-submit-btn');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Authenticating...</span><i class="fas fa-spinner fa-spin"></i>';
+            
+            try {
+                // Check if Firebase is available
+                if (typeof window.firebaseAuth === 'undefined' || typeof window.signInWithEmailAndPassword === 'undefined') {
+                    throw new Error('Firebase not properly initialized. Please check your configuration.');
+                }
+                
+                // Attempt Firebase authentication
+                const userCredential = await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
+                const user = userCredential.user;
+                
+                showAuthMessage('Authentication successful! Welcome back.', 'success');
+                console.log('User authenticated:', user.email);
+                
+                // Here you can add additional authenticated user functionality
+                setTimeout(() => {
+                    authModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    resetAuthForm();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Authentication error:', error);
+                let errorMessage = 'Authentication failed. Please check your credentials.';
+                
+                // Customize error messages based on Firebase error codes
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email address.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password. Please try again.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorMessage = error.message || errorMessage;
+                }
+                
+                showAuthMessage(errorMessage, 'error');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Authenticate</span><i class="fas fa-key"></i>';
+            }
+        });
+    }
+
+    function showAuthMessage(message, type) {
+        authMessage.textContent = message;
+        authMessage.className = `auth-message ${type}`;
+        authMessage.style.opacity = '1';
+    }
+
+    function resetAuthForm() {
+        if (authForm) {
+            authForm.reset();
+        }
+        authMessage.style.opacity = '0';
+        authMessage.className = 'auth-message';
+    }
 }
 
 // ==========================================

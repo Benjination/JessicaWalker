@@ -207,6 +207,7 @@
             <button class="cta-button" aria-label="Navigate to contact section">
                 <span>Let's Connect</span>
                 <i class="fas fa-handshake" aria-hidden="true"></i>
+                <i class="fas fa-star secret-star" aria-hidden="true" title="Secret Access"></i>
             </button>
         </div>
     </section>
@@ -549,14 +550,57 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="auth-container">
-                <!-- Auth content will be loaded here -->
-                <h3>Professional Network Access</h3>
-                <p>Connect with Jessica's professional network and exclusive opportunities.</p>
-                <button class="modal-btn">Coming Soon</button>
+                <div class="auth-header">
+                    <i class="fas fa-star auth-star"></i>
+                    <h3>Secret Access Portal</h3>
+                    <p>Enter your credentials to access exclusive features</p>
+                </div>
+                <form id="auth-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="auth-email">Email</label>
+                        <input type="email" id="auth-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="auth-password">Password</label>
+                        <input type="password" id="auth-password" name="password" required>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">
+                        <span>Authenticate</span>
+                        <i class="fas fa-key"></i>
+                    </button>
+                </form>
+                <div id="auth-message" class="auth-message"></div>
             </div>
         </div>
     </div>
 
+    <!-- Firebase Scripts -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsmk3uImdPFOPLZrEsK6J1c20gk8S3hbY",
+            authDomain: "portfolio-7148b.firebaseapp.com",
+            projectId: "portfolio-7148b",
+            storageBucket: "portfolio-7148b.firebasestorage.app",
+            messagingSenderId: "752778696520",
+            appId: "1:752778696520:web:f7e0c9821b0eed6e55857d",
+            measurementId: "G-9K8LXK6JSN"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Make auth available globally
+        window.firebaseAuth = auth;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        
+        console.log('Firebase initialized successfully for Jessica Walker portfolio');
+    </script>
     <script src="js/main.js"></script>
 </body>
 </html>
