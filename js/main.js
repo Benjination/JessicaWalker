@@ -256,13 +256,13 @@ function submitContactForm(data) {
 // AUTH MODAL FUNCTIONALITY
 // ==========================================
 function initializeAuthModal() {
-    const secretStar = document.querySelector('.secret-star');
+    const secretW = document.querySelector('.secret-w');
     const authModal = document.getElementById('auth-modal');
     const authForm = document.getElementById('auth-form');
     const authMessage = document.getElementById('auth-message');
     
     // Safety check - only initialize if elements exist
-    if (!secretStar || !authModal) {
+    if (!secretW || !authModal) {
         console.log('Auth modal elements not found - skipping initialization');
         return;
     }
@@ -274,13 +274,13 @@ function initializeAuthModal() {
         return;
     }
 
-    // Secret star click handler
-    secretStar.addEventListener('click', (e) => {
+    // Secret W click handler
+    secretW.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation(); // Prevent triggering the main button
+        e.stopPropagation();
         authModal.style.display = 'block';
         document.body.style.overflow = 'hidden';
-        console.log('Secret access portal opened');
+        console.log('Secret portal accessed via footer');
     });
     
     // Close modal handlers

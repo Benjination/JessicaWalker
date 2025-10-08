@@ -490,40 +490,26 @@ body {
     animation: flutter 2s ease-in-out infinite;
 }
 
-/* Secret Star Styling */
-.secret-star {
-    position: absolute;
-    top: 5px;
-    right: 8px;
-    font-size: 0.7rem;
+/* Secret W Styling */
+.secret-w {
+    color: inherit;
+    cursor: default;
+    transition: all 0.3s ease;
+    position: relative;
+    display: inline-block;
+}
+
+.secret-w:hover {
     color: var(--primary-gold);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
     cursor: pointer;
-    z-index: 10;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+    transform: scale(1.1);
 }
 
-.cta-button:hover .secret-star {
-    opacity: 0.6;
-    animation: twinkle 1.5s ease-in-out infinite;
-}
-
-.secret-star:hover {
-    opacity: 1 !important;
+.secret-w:active {
+    color: var(--primary-pink);
+    text-shadow: 0 0 12px rgba(255, 105, 180, 0.8);
     transform: scale(1.2);
-    animation: starGlow 0.5s ease-in-out;
-}
-
-@keyframes twinkle {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-}
-
-@keyframes starGlow {
-    0% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.8); }
-    50% { text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 25px rgba(255, 215, 0, 0.8); }
-    100% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.8); }
 }
 
 /* Auth Modal Styling */
@@ -1616,13 +1602,17 @@ body {
         font-size: 1.1rem;
     }
     
-    /* Mobile Auth Styles */
-    .secret-star {
-        top: 3px;
-        right: 6px;
-        font-size: 0.6rem;
+    /* Mobile Secret W Styles */
+    .secret-w {
+        padding: 2px 4px;
+        border-radius: 3px;
     }
     
+    .secret-w:hover {
+        background: rgba(255, 215, 0, 0.1);
+    }
+    
+    /* Mobile Auth Styles */
     .auth-form input {
         padding: 15px 12px;
         font-size: 1rem;
