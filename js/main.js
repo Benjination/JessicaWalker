@@ -942,3 +942,195 @@ class BlogManager {
 // Initialize blog manager
 const blogManager = new BlogManager();
 window.blogManager = blogManager;
+
+// ==========================================
+// PUBLIC BLOG DISPLAY
+// ==========================================
+
+class PublicBlogViewer {
+    constructor() {
+        this.init();
+    }
+
+    async init() {
+        // Wait for Firebase to be available
+        if (typeof window.firebaseDB === 'undefined') {
+            setTimeout(() => this.init(), 100);
+            return;
+        }
+
+        await this.loadPublishedPosts();
+    }
+
+    async loadPublishedPosts() {
+        const loadingEl = document.getElementById('blogLoading');
+        const postsEl = document.getElementById('blogPosts');
+        const emptyEl = document.getElementById('blogEmpty');
+
+        if (!postsEl) return; // Not on a page with blog section
+
+        try {
+            // Show loading
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (emptyEl) emptyEl.style.display = 'none';
+            postsEl.innerHTML = '';
+
+            // Query for published posts only
+            const q = window.firebaseFirestore.query(
+                window.firebaseFirestore.collection(window.firebaseDB, 'JessBlogs'),
+                window.firebaseFirestore.orderBy('createdAt', 'desc')
+            );
+
+            const querySnapshot = await window.firebaseFirestore.getDocs(q);
+            
+            // Hide loading
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            // Filter for published posts only
+            const publishedPosts = [];
+            querySnapshot.forEach((doc) => {
+                const post = doc.data();
+                if (post.published) {
+                    publishedPosts.push({ id: doc.id, ...post });
+                }
+            });
+
+            if (publishedPosts.length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+
+            // Display posts
+            const postsHTML = publishedPosts.map(post => this.createPostHTML(post)).join('');
+            postsEl.innerHTML = postsHTML;
+
+            // Add click handlers for read more functionality
+            this.initializeReadMoreButtons();
+
+        } catch (error) {
+            console.error('Error loading blog posts:', error);
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (emptyEl) {
+                emptyEl.style.display = 'block';
+                emptyEl.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Unable to load blog posts at the moment. Please try again later.</p>
+                `;
+            }
+        }
+    }
+
+    createPostHTML(post) {
+        const date = post.createdAt ? this.formatDate(post.createdAt.toDate()) : 'Recent';
+        const preview = this.createPreview(post.body, 200);
+        const imageHTML = post.image ? 
+            `<img src="Images/${post.image}" alt="${this.escapeHtml(post.title)}" class="blog-post-image" loading="lazy">` : '';
+
+        return `
+            <article class="blog-post" data-post-id="${post.id}">
+                <div class="blog-post-header">
+                    <h3 class="blog-post-title">${this.escapeHtml(post.title)}</h3>
+                    <div class="blog-post-date">
+                        <i class="fas fa-calendar-alt"></i>
+                        ${date}
+                    </div>
+                </div>
+                ${imageHTML}
+                <div class="blog-post-content">
+                    <div class="blog-preview">${preview.text}</div>
+                    ${preview.hasMore ? `
+                        <div class="blog-full-content" style="display: none;">
+                            ${this.formatContent(post.body)}
+                        </div>
+                        <a href="#" class="blog-read-more" data-action="expand">
+                            Read More <i class="fas fa-arrow-right"></i>
+                        </a>
+                    ` : ''}
+                </div>
+            </article>
+        `;
+    }
+
+    createPreview(content, maxLength) {
+        const plainText = content.replace(/<[^>]*>/g, '').trim();
+        
+        if (plainText.length <= maxLength) {
+            return {
+                text: this.formatContent(content),
+                hasMore: false
+            };
+        }
+
+        const truncated = plainText.substring(0, maxLength);
+        const lastSpace = truncated.lastIndexOf(' ');
+        const preview = lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated;
+        
+        return {
+            text: this.escapeHtml(preview) + '...',
+            hasMore: true
+        };
+    }
+
+    formatContent(content) {
+        // Convert line breaks to paragraphs
+        return content.split('\n\n')
+            .map(paragraph => `<p>${this.escapeHtml(paragraph.trim())}</p>`)
+            .join('');
+    }
+
+    formatDate(date) {
+        const options = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        return date.toLocaleDateString('en-US', options);
+    }
+
+    initializeReadMoreButtons() {
+        const readMoreButtons = document.querySelectorAll('.blog-read-more');
+        
+        readMoreButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleReadMore(button);
+            });
+        });
+    }
+
+    toggleReadMore(button) {
+        const post = button.closest('.blog-post');
+        const preview = post.querySelector('.blog-preview');
+        const fullContent = post.querySelector('.blog-full-content');
+        const isExpanded = button.dataset.action === 'collapse';
+
+        if (isExpanded) {
+            // Collapse
+            preview.style.display = 'block';
+            fullContent.style.display = 'none';
+            button.innerHTML = 'Read More <i class="fas fa-arrow-right"></i>';
+            button.dataset.action = 'expand';
+            
+            // Smooth scroll to post title
+            post.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            // Expand
+            preview.style.display = 'none';
+            fullContent.style.display = 'block';
+            button.innerHTML = 'Read Less <i class="fas fa-arrow-up"></i>';
+            button.dataset.action = 'collapse';
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+}
+
+// Initialize public blog viewer when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const publicBlogViewer = new PublicBlogViewer();
+    window.publicBlogViewer = publicBlogViewer;
+});
