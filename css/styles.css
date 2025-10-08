@@ -1435,6 +1435,8 @@ body {
         text-align: center;
         padding: 200px 20px 60px; /* Increased from 160px to 200px for better navbar clearance */
         min-height: 100vh;
+        align-items: flex-start; /* Override desktop center alignment */
+        justify-content: flex-start; /* Start content from top */
     }
     
     .hero-background {
@@ -1656,6 +1658,8 @@ body {
 @media screen and (max-width: 480px) {
     .hero {
         padding: 180px 15px 50px; /* Increased from 140px to 180px for better navbar clearance */
+        align-items: flex-start; /* Override desktop center alignment */
+        justify-content: flex-start; /* Start content from top */
     }
     
     .hero-background {
