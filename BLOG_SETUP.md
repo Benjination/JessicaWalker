@@ -12,7 +12,7 @@ Your website now has a complete hidden blog management system accessible through
 
 ### Create Posts
 - **Title**: Required field for the blog post title
-- **Featured Image**: Optional dropdown of available images from your Images folder
+- **Featured Image**: Dropdown of available images from your Images folder
 - **Content**: Rich text area for the blog post body
 - **Publish Toggle**: Choose whether to publish immediately or save as draft
 
@@ -23,20 +23,8 @@ Your website now has a complete hidden blog management system accessible through
 - Delete posts (with confirmation)
 - Posts are ordered by creation date (newest first)
 
-### Image Upload
-- Upload new images to use in blog posts
-- Drag & drop or click to browse
-- Preview images before saving
-- Automatic filename suggestion
-- 5MB file size limit
-
 ## Image Management
-**Important**: The image upload feature downloads images to your computer. For images to be usable in blog posts, you need to:
-
-1. **Upload via website** → Downloads image to your computer
-2. **Manually move** the downloaded image to your local `Images` folder
-3. **Git commit & push** the changes to your repository
-4. **Refresh the blog management** to see the new image in the dropdown
+Images are managed through your local Images folder. The dropdown in "Create Post" shows all available images from your Images folder.
 
 ### Current Available Images:
 - Butterfly1.png through Butterfly4.png
@@ -44,11 +32,9 @@ Your website now has a complete hidden blog management system accessible through
 - Jessica1.png through Jessica5.png
 
 ### To Add New Images:
-1. Use the "Upload Image" tab in the blog management system
-2. Upload your image and give it a filename
-3. The image will download to your computer
-4. Manually move the downloaded image to the `Images` folder
-5. The image will then be available in the "Featured Image" dropdown
+1. Add image files directly to your local `Images` folder
+2. Git commit & push the changes to your repository
+3. The new images will be available in the Featured Image dropdown
 
 ## Firebase Storage
 Blog posts are stored in Firebase Firestore in a collection called `JessBlogs` (separate from your existing blogs collection). Each post includes:

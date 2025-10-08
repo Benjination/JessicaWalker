@@ -684,9 +684,6 @@ class BlogManager {
             blogForm.addEventListener('submit', (e) => this.handleBlogSubmit(e));
         }
 
-        // Image upload functionality
-        this.initializeImageUpload();
-
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
             if (e.target === blogModal) {
@@ -711,8 +708,6 @@ class BlogManager {
         // Load specific tab content
         if (tabName === 'manage') {
             this.loadBlogPosts();
-        } else if (tabName === 'upload') {
-            this.resetUploadArea();
         }
     }
 
@@ -926,145 +921,6 @@ class BlogManager {
             option.textContent = image;
             imageSelect.appendChild(option);
         });
-    }
-
-    initializeImageUpload() {
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('imageUpload');
-        const previewSection = document.getElementById('uploadPreview');
-        const previewImage = document.getElementById('previewImage');
-        const fileNameInput = document.getElementById('imageFileName');
-        const confirmBtn = document.getElementById('confirmUpload');
-        const cancelBtn = document.getElementById('cancelUpload');
-
-        if (!uploadArea || !fileInput) return;
-
-        // Click to browse
-        uploadArea.addEventListener('click', () => fileInput.click());
-
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = 'var(--primary-pink)';
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.borderColor = 'var(--primary-gold)';
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = 'var(--primary-gold)';
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                this.handleImageFile(files[0]);
-            }
-        });
-
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                this.handleImageFile(e.target.files[0]);
-            }
-        });
-
-        // Confirm upload
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => this.saveImageFile());
-        }
-
-        // Cancel upload
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.resetUploadArea());
-        }
-    }
-
-    handleImageFile(file) {
-        if (!file.type.startsWith('image/')) {
-            showNotification('Please select an image file.', 'error');
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            showNotification('Image file is too large. Please choose a file under 5MB.', 'error');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const previewImage = document.getElementById('previewImage');
-            const previewSection = document.getElementById('uploadPreview');
-            const uploadArea = document.getElementById('uploadArea');
-            const fileNameInput = document.getElementById('imageFileName');
-
-            if (previewImage && previewSection && uploadArea && fileNameInput) {
-                previewImage.src = e.target.result;
-                uploadArea.style.display = 'none';
-                previewSection.style.display = 'block';
-                
-                // Suggest filename (without extension)
-                const baseName = file.name.replace(/\.[^/.]+$/, "");
-                fileNameInput.value = baseName;
-                
-                this.currentImageFile = file;
-                this.currentImageData = e.target.result;
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-
-    async saveImageFile() {
-        const fileNameInput = document.getElementById('imageFileName');
-        if (!fileNameInput || !this.currentImageFile) return;
-
-        const fileName = fileNameInput.value.trim();
-        if (!fileName) {
-            showNotification('Please enter a filename.', 'error');
-            return;
-        }
-
-        // Get file extension
-        const extension = this.currentImageFile.name.split('.').pop().toLowerCase();
-        const fullFileName = `${fileName}.${extension}`;
-
-        try {
-            // Create download link (since we can't directly save to file system)
-            const link = document.createElement('a');
-            link.href = this.currentImageData;
-            link.download = fullFileName;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Add to available images list
-            if (!this.availableImages.includes(fullFileName)) {
-                this.availableImages.push(fullFileName);
-                this.updateImageSelect();
-            }
-
-            showNotification(`Image saved as ${fullFileName}. Please manually move it to the Images folder.`, 'success');
-            this.resetUploadArea();
-        } catch (error) {
-            console.error('Error saving image:', error);
-            showNotification('Error saving image. Please try again.', 'error');
-        }
-    }
-
-    resetUploadArea() {
-        const uploadArea = document.getElementById('uploadArea');
-        const previewSection = document.getElementById('uploadPreview');
-        const fileInput = document.getElementById('imageUpload');
-        const fileNameInput = document.getElementById('imageFileName');
-
-        if (uploadArea) uploadArea.style.display = 'block';
-        if (previewSection) previewSection.style.display = 'none';
-        if (fileInput) fileInput.value = '';
-        if (fileNameInput) fileNameInput.value = '';
-        
-        this.currentImageFile = null;
-        this.currentImageData = null;
     }
 
     // Show blog management modal (called after successful auth)

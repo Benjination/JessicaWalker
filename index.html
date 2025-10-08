@@ -585,7 +585,6 @@
             <div class="blog-tabs">
                 <button class="blog-tab-btn active" data-tab="create">Create Post</button>
                 <button class="blog-tab-btn" data-tab="manage">Manage Posts</button>
-                <button class="blog-tab-btn" data-tab="upload">Upload Image</button>
             </div>
 
             <!-- Create Post Tab -->
@@ -628,29 +627,6 @@
                 <div class="blog-posts-list">
                     <div class="loading" id="postsLoading">Loading posts...</div>
                     <div id="blogPostsList"></div>
-                </div>
-            </div>
-
-            <!-- Upload Image Tab -->
-            <div id="uploadTab" class="blog-tab-content">
-                <div class="upload-section">
-                    <h3>Upload New Image</h3>
-                    <p>Upload images to use in your blog posts. Images will be saved to the Images folder.</p>
-                    
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">📷</div>
-                        <p>Drop image here or click to browse</p>
-                        <input type="file" id="imageUpload" accept="image/*" hidden>
-                    </div>
-                    
-                    <div class="upload-preview" id="uploadPreview" style="display: none;">
-                        <img id="previewImage" alt="Preview">
-                        <div class="preview-controls">
-                            <input type="text" id="imageFileName" placeholder="Enter filename (without extension)">
-                            <button id="confirmUpload" class="blog-submit-btn">Save Image</button>
-                            <button id="cancelUpload" class="blog-cancel-btn">Cancel</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
