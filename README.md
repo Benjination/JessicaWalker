@@ -301,6 +301,63 @@ This project is created specifically for Jessica Walker's professional website a
 - **Firebase Integration** showing real-world backend service implementation
 - **Professional UI/UX** balancing aesthetics with functionality
 
+## 🐛 Troubleshooting
+
+### Blog Posts Not Loading on Public Site
+
+**Problem**: Blog posts don't appear for public visitors, but work after republishing when authenticated.
+
+**Cause**: Firestore security rules don't allow public reading of blog posts.
+
+**Solution**: Update Firestore security rules to allow public access to published posts:
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project (portfolio-7148b)
+3. Navigate to **Firestore Database > Rules**
+4. Replace existing rules with:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /JessBlogs/{postId} {
+      // Allow anyone to read published blog posts
+      allow read: if resource.data.published == true;
+      // Only authenticated users can write/read all posts
+      allow write: if request.auth != null;
+      allow read: if request.auth != null;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+5. Click **"Publish"**
+
+**See also**: `FIRESTORE_RULES.md` for detailed configuration instructions.
+
+### Admin Access Issues
+
+**Problem**: Cannot access blog management system.
+
+**Solutions**:
+- Click the **"W"** in "Website by BNiccum" at the bottom of the page
+- Use correct authentication credentials
+- Check browser console for error messages
+- Verify Firebase authentication is enabled
+
+### Images Not Appearing in Blog Editor
+
+**Problem**: New images don't show in dropdown.
+
+**Solutions**:
+- Add images to the `Images/` folder
+- Update `imagePatterns` array at top of `js/main.js`
+- Commit and push changes to repository
+- Refresh the admin panel
+
 ---
 
 *Created with 💖 and 🦋 for Jessica Walker*  

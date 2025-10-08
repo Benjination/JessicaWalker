@@ -1064,15 +1064,49 @@ class PublicBlogViewer {
     }
 
     async init() {
-        // Wait for Firebase to be available
-        if (typeof window.firebaseDB === 'undefined') {
-            setTimeout(() => this.init(), 100);
-            return;
-        }
+        // Wait for Firebase to be available with timeout
+        let retryCount = 0;
+        const maxRetries = 50; // 5 seconds total
+        
+        const waitForFirebase = () => {
+            if (typeof window.firebaseDB === 'undefined' || typeof window.firebaseFirestore === 'undefined') {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    setTimeout(() => this.init(), 100);
+                    return false;
+                } else {
+                    console.error('Firebase initialization timeout - blog posts will not load');
+                    this.showError('Unable to connect to blog service. Please refresh the page.');
+                    return false;
+                }
+            }
+            return true;
+        };
 
-        this.initializeEventListeners();
-        await this.loadAllPosts();
-        this.displayPosts();
+        if (!waitForFirebase()) return;
+
+        try {
+            this.initializeEventListeners();
+            await this.loadAllPosts();
+            this.displayPosts();
+        } catch (error) {
+            console.error('Error initializing blog viewer:', error);
+            this.showError('Error loading blog posts. Please refresh the page.');
+        }
+    }
+
+    showError(message) {
+        const loadingEl = document.getElementById('blogLoading');
+        const emptyEl = document.getElementById('blogEmpty');
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl) {
+            emptyEl.style.display = 'block';
+            emptyEl.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>${message}</p>
+            `;
+        }
     }
 
     initializeEventListeners() {
@@ -1144,9 +1178,10 @@ class PublicBlogViewer {
         }
     }
 
-    async loadAllPosts() {
+    async loadAllPosts(retryCount = 0) {
         const loadingEl = document.getElementById('blogLoading');
         const emptyEl = document.getElementById('blogEmpty');
+        const maxRetries = 3;
 
         try {
             // Show loading
@@ -1180,13 +1215,40 @@ class PublicBlogViewer {
 
         } catch (error) {
             console.error('Error loading blog posts:', error);
+            
+            // Check if it's a permission error
+            const isPermissionError = error.code === 'permission-denied' || 
+                                    error.message?.includes('permission') ||
+                                    error.message?.includes('Missing or insufficient permissions');
+            
+            // Retry for non-permission errors
+            if (!isPermissionError && retryCount < maxRetries) {
+                console.log(`Retrying blog load (attempt ${retryCount + 1}/${maxRetries})...`);
+                setTimeout(() => this.loadAllPosts(retryCount + 1), 1000 * (retryCount + 1));
+                return;
+            }
+            
             if (loadingEl) loadingEl.style.display = 'none';
+            
             if (emptyEl) {
                 emptyEl.style.display = 'block';
-                emptyEl.innerHTML = `
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Unable to load blog posts at the moment. Please try again later.</p>
-                `;
+                if (isPermissionError) {
+                    emptyEl.innerHTML = `
+                        <i class="fas fa-lock"></i>
+                        <p>Blog posts are currently being set up. Please check back soon!</p>
+                        <p style="font-size: 0.9rem; color: var(--text-medium); margin-top: 1rem;">
+                            <strong>Note:</strong> If you're the administrator, please check the Firestore security rules documentation.
+                        </p>
+                    `;
+                } else {
+                    emptyEl.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Unable to load blog posts at the moment. Please try again later.</p>
+                        <p style="font-size: 0.9rem; color: var(--text-medium); margin-top: 1rem;">
+                            ${retryCount >= maxRetries ? `Tried ${maxRetries + 1} times. ` : ''}Error: ${error.message || 'Unknown error'}
+                        </p>
+                    `;
+                }
             }
         }
     }
@@ -1467,6 +1529,205 @@ class PublicBlogViewer {
 
 // Initialize public blog viewer when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const publicBlogViewer = new PublicBlogViewer();
-    window.publicBlogViewer = publicBlogViewer;
+    // Wait for Firebase to be initialized before creating blog viewer
+    const initializeBlogViewer = () => {
+        if (typeof window.firebaseDB !== 'undefined' && typeof window.firebaseFirestore !== 'undefined') {
+            const publicBlogViewer = new PublicBlogViewer();
+            window.publicBlogViewer = publicBlogViewer;
+        } else {
+            // Firebase not ready yet, wait a bit more
+            setTimeout(initializeBlogViewer, 100);
+        }
+    };
+    
+    // Start the initialization process
+    initializeBlogViewer();
 });
+
+// ==========================================
+// LEGAL DOCUMENT SYSTEM
+// ==========================================
+
+/**
+ * Legal document management system
+ * Displays legal documents in a modal with proper formatting
+ */
+class LegalDocumentManager {
+    constructor() {
+        this.cache = new Map();
+        this.currentDocument = null;
+    }
+
+    async loadDocument(documentName) {
+        // Check cache first
+        if (this.cache.has(documentName)) {
+            return this.cache.get(documentName);
+        }
+
+        try {
+            const response = await fetch(`legal/${documentName}.md`);
+            if (!response.ok) {
+                throw new Error(`Failed to load document: ${response.status}`);
+            }
+            
+            const content = await response.text();
+            const htmlContent = this.convertMarkdownToHTML(content);
+            
+            // Cache the document
+            this.cache.set(documentName, htmlContent);
+            return htmlContent;
+        } catch (error) {
+            console.error('Error loading legal document:', error);
+            return this.getErrorContent(documentName);
+        }
+    }
+
+    convertMarkdownToHTML(markdown) {
+        // Simple markdown to HTML converter for legal documents
+        let html = markdown;
+
+        // Convert headers
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+
+        // Convert bold text
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Convert italic text
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // Convert inline code
+        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+
+        // Convert links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+        // Convert line breaks to paragraphs
+        const paragraphs = html.split('\n\n').filter(p => p.trim());
+        html = paragraphs.map(p => {
+            p = p.trim();
+            if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol')) {
+                return p;
+            }
+            return `<p>${p}</p>`;
+        }).join('\n');
+
+        // Convert unordered lists
+        html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+        return html;
+    }
+
+    getErrorContent(documentName) {
+        return `
+            <div style="text-align: center; padding: 2rem; color: var(--text-medium);">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--primary-gold); margin-bottom: 1rem;"></i>
+                <h2>Document Unavailable</h2>
+                <p>We're sorry, but the ${this.formatDocumentName(documentName)} document is currently unavailable.</p>
+                <p>Please try again later or contact us directly for assistance.</p>
+                <p><strong>Email:</strong> <a href="mailto:jwalker@bmsmanagement.com" style="color: var(--primary-pink);">jwalker@bmsmanagement.com</a></p>
+            </div>
+        `;
+    }
+
+    formatDocumentName(documentName) {
+        return documentName
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
+
+    getDocumentTitle(documentName) {
+        const titles = {
+            'privacy-policy': '🔒 Privacy Policy',
+            'terms-of-service': '📋 Terms of Service',
+            'cookie-policy': '🍪 Cookie Policy',
+            'disclaimer': '⚖️ Legal Disclaimer'
+        };
+        return titles[documentName] || this.formatDocumentName(documentName);
+    }
+}
+
+// Global legal document manager
+const legalDocumentManager = new LegalDocumentManager();
+
+// Global functions for legal document handling
+async function showLegalDocument(documentName) {
+    const modal = document.getElementById('legalModal');
+    const title = document.getElementById('legalDocumentTitle');
+    const content = document.getElementById('legalDocumentContent');
+
+    if (!modal || !title || !content) {
+        console.error('Legal modal elements not found');
+        return;
+    }
+
+    // Show modal and loading state
+    modal.style.display = 'block';
+    title.textContent = legalDocumentManager.getDocumentTitle(documentName);
+    content.innerHTML = `
+        <div class="legal-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading document...</span>
+        </div>
+    `;
+
+    // Add body class to prevent scrolling
+    document.body.classList.add('modal-open');
+
+    try {
+        // Load and display document
+        const documentHTML = await legalDocumentManager.loadDocument(documentName);
+        content.innerHTML = documentHTML;
+        legalDocumentManager.currentDocument = documentName;
+
+        // Smooth scroll to top of content
+        content.scrollTop = 0;
+
+        // Track document view (optional analytics)
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'legal_document_view', {
+                document_name: documentName,
+                page_title: legalDocumentManager.getDocumentTitle(documentName)
+            });
+        }
+
+    } catch (error) {
+        console.error('Failed to load legal document:', error);
+        content.innerHTML = legalDocumentManager.getErrorContent(documentName);
+    }
+}
+
+function closeLegalModal() {
+    const modal = document.getElementById('legalModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        legalDocumentManager.currentDocument = null;
+    }
+}
+
+// Close modal when clicking outside content
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('legalModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeLegalModal();
+            }
+        });
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && legalDocumentManager.currentDocument) {
+            closeLegalModal();
+        }
+    });
+});
+
+// Export legal functions for global access
+window.showLegalDocument = showLegalDocument;
+window.closeLegalModal = closeLegalModal;

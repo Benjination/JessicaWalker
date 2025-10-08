@@ -594,6 +594,18 @@
         <div class="container">
             <p>&copy; 2025 Jessica Walker - National Recruiter & Talent Acquisition Specialist. All rights reserved.</p>
             <p>Made with <i class="fas fa-heart"></i> and a passion for connecting talent. | <a href="mailto:jwalker@bmsmanagement.com" style="color: var(--primary-pink);">jwalker@bmsmanagement.com</a></p>
+            
+            <!-- Legal Links -->
+            <div class="legal-links">
+                <a href="#" onclick="showLegalDocument('privacy-policy')" class="legal-link">Privacy Policy</a>
+                <span class="legal-separator">•</span>
+                <a href="#" onclick="showLegalDocument('terms-of-service')" class="legal-link">Terms of Service</a>
+                <span class="legal-separator">•</span>
+                <a href="#" onclick="showLegalDocument('cookie-policy')" class="legal-link">Cookie Policy</a>
+                <span class="legal-separator">•</span>
+                <a href="#" onclick="showLegalDocument('disclaimer')" class="legal-link">Disclaimer</a>
+            </div>
+            
             <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;"><span class="secret-w">W</span>ebsite by <a href="https://benjaminniccum.com" target="_blank" rel="noopener" style="color: var(--primary-lavender); text-decoration: none; font-weight: 500;">BNiccum</a></p>
         </div>
     </footer>
@@ -682,6 +694,29 @@
                     <div class="loading" id="postsLoading">Loading posts...</div>
                     <div id="blogPostsList"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legal Document Modal -->
+    <div id="legalModal" class="modal">
+        <div class="modal-content legal-modal-content">
+            <span class="close legal-close" onclick="closeLegalModal()">&times;</span>
+            <div class="legal-header">
+                <h2 id="legalDocumentTitle">Legal Document</h2>
+                <p class="legal-subtitle">Please review the following information</p>
+            </div>
+            <div class="legal-document-content" id="legalDocumentContent">
+                <div class="legal-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading document...</span>
+                </div>
+            </div>
+            <div class="legal-footer">
+                <button onclick="closeLegalModal()" class="legal-close-btn">
+                    <i class="fas fa-check"></i>
+                    Got it
+                </button>
             </div>
         </div>
     </div>
