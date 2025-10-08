@@ -32,6 +32,18 @@ const imagePatterns = [
 ];
 
 // ==========================================
+// BLOG PERFORMANCE CONFIGURATION
+// ==========================================
+const blogConfig = {
+    postsPerPage: 6,                    // Number of posts to load per page
+    scrollThreshold: 300,               // Pixels from bottom to trigger load more
+    searchMinChars: 2,                  // Minimum characters to trigger search
+    searchDebounceMs: 300,              // Debounce delay for search input
+    maxSearchResults: 20,               // Maximum search results to display
+    lazyLoadOffset: 100                 // Pixels offset for lazy loading images
+};
+
+// ==========================================
 // DOM CONTENT LOADED EVENT
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -783,6 +795,14 @@ class BlogManager {
             // Reset form
             e.target.reset();
             this.switchTab('manage');
+            
+            // Refresh blog posts list
+            this.loadBlogPosts();
+            
+            // Refresh public blog view if it exists
+            if (window.publicBlogViewer) {
+                await window.publicBlogViewer.refresh();
+            }
         } catch (error) {
             console.error('Error saving blog post:', error);
             showNotification('Error saving blog post. Please try again.', 'error');
@@ -902,6 +922,11 @@ class BlogManager {
             
             showNotification(`Post ${shouldPublish ? 'published' : 'unpublished'} successfully!`, 'success');
             this.loadBlogPosts();
+            
+            // Refresh public blog view if it exists
+            if (window.publicBlogViewer) {
+                await window.publicBlogViewer.refresh();
+            }
         } catch (error) {
             console.error('Error toggling publish status:', error);
             showNotification('Error updating post. Please try again.', 'error');
@@ -919,6 +944,11 @@ class BlogManager {
             );
             showNotification('Post deleted successfully!', 'success');
             this.loadBlogPosts();
+            
+            // Refresh public blog view if it exists
+            if (window.publicBlogViewer) {
+                await window.publicBlogViewer.refresh();
+            }
         } catch (error) {
             console.error('Error deleting post:', error);
             showNotification('Error deleting post. Please try again.', 'error');
@@ -1021,6 +1051,15 @@ window.blogManager = blogManager;
 
 class PublicBlogViewer {
     constructor() {
+        this.allPosts = []; // Store all posts for search
+        this.displayedPosts = []; // Currently displayed posts
+        this.currentPage = 0;
+        this.isLoading = false;
+        this.hasMorePosts = true;
+        this.searchTerm = '';
+        this.searchTimeout = null;
+        this.isSearchActive = false;
+        
         this.init();
     }
 
@@ -1031,23 +1070,90 @@ class PublicBlogViewer {
             return;
         }
 
-        await this.loadPublishedPosts();
+        this.initializeEventListeners();
+        await this.loadAllPosts();
+        this.displayPosts();
     }
 
-    async loadPublishedPosts() {
-        const loadingEl = document.getElementById('blogLoading');
-        const postsEl = document.getElementById('blogPosts');
-        const emptyEl = document.getElementById('blogEmpty');
+    initializeEventListeners() {
+        // Search functionality
+        const searchInput = document.getElementById('blogSearch');
+        const searchClear = document.getElementById('blogSearchClear');
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const value = e.target.value.trim();
+                
+                // Show/hide clear button
+                if (searchClear) {
+                    searchClear.style.display = value ? 'block' : 'none';
+                }
+                
+                // Debounce search
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.handleSearch(value);
+                }, blogConfig.searchDebounceMs);
+            });
+        }
+        
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                searchInput.value = '';
+                searchClear.style.display = 'none';
+                this.handleSearch('');
+            });
+        }
 
-        if (!postsEl) return; // Not on a page with blog section
+        // Load more button
+        const loadMoreBtn = document.getElementById('blogLoadMore');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => {
+                this.loadMorePosts();
+            });
+        }
+
+        // Infinite scroll (optional - enabled when near bottom)
+        this.initializeInfiniteScroll();
+    }
+
+    initializeInfiniteScroll() {
+        let ticking = false;
+        
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    this.checkScrollPosition();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    }
+
+    checkScrollPosition() {
+        if (this.isLoading || !this.hasMorePosts || this.isSearchActive) return;
+
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        // Trigger when within threshold of bottom
+        if (scrollTop + windowHeight >= documentHeight - blogConfig.scrollThreshold) {
+            this.loadMorePosts();
+        }
+    }
+
+    async loadAllPosts() {
+        const loadingEl = document.getElementById('blogLoading');
+        const emptyEl = document.getElementById('blogEmpty');
 
         try {
             // Show loading
             if (loadingEl) loadingEl.style.display = 'block';
             if (emptyEl) emptyEl.style.display = 'none';
-            postsEl.innerHTML = '';
 
-            // Query for published posts only
+            // Query for all posts (we'll filter published ones)
             const q = window.firebaseFirestore.query(
                 window.firebaseFirestore.collection(window.firebaseDB, 'JessBlogs'),
                 window.firebaseFirestore.orderBy('createdAt', 'desc')
@@ -1055,29 +1161,22 @@ class PublicBlogViewer {
 
             const querySnapshot = await window.firebaseFirestore.getDocs(q);
             
-            // Hide loading
-            if (loadingEl) loadingEl.style.display = 'none';
-
             // Filter for published posts only
-            const publishedPosts = [];
+            this.allPosts = [];
             querySnapshot.forEach((doc) => {
                 const post = doc.data();
                 if (post.published) {
-                    publishedPosts.push({ id: doc.id, ...post });
+                    this.allPosts.push({ id: doc.id, ...post });
                 }
             });
 
-            if (publishedPosts.length === 0) {
+            // Hide loading
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            if (this.allPosts.length === 0) {
                 if (emptyEl) emptyEl.style.display = 'block';
                 return;
             }
-
-            // Display posts
-            const postsHTML = publishedPosts.map(post => this.createPostHTML(post)).join('');
-            postsEl.innerHTML = postsHTML;
-
-            // Add click handlers for read more functionality
-            this.initializeReadMoreButtons();
 
         } catch (error) {
             console.error('Error loading blog posts:', error);
@@ -1092,16 +1191,133 @@ class PublicBlogViewer {
         }
     }
 
+    displayPosts(posts = null) {
+        const postsEl = document.getElementById('blogPosts');
+        if (!postsEl) return;
+
+        const postsToDisplay = posts || this.allPosts;
+        
+        // Reset pagination if new search
+        if (posts) {
+            this.currentPage = 0;
+            this.displayedPosts = [];
+            postsEl.innerHTML = '';
+        }
+
+        // Calculate posts for current page
+        const startIndex = this.currentPage * blogConfig.postsPerPage;
+        const endIndex = startIndex + blogConfig.postsPerPage;
+        const newPosts = postsToDisplay.slice(startIndex, endIndex);
+
+        // Add new posts to displayed posts
+        this.displayedPosts.push(...newPosts);
+
+        // Create HTML for new posts
+        const newPostsHTML = newPosts.map(post => this.createPostHTML(post)).join('');
+        
+        if (this.currentPage === 0) {
+            postsEl.innerHTML = newPostsHTML;
+        } else {
+            postsEl.insertAdjacentHTML('beforeend', newPostsHTML);
+        }
+
+        // Update pagination state
+        this.hasMorePosts = endIndex < postsToDisplay.length;
+        this.updateLoadMoreButton();
+
+        // Initialize read more buttons for new posts
+        this.initializeReadMoreButtons();
+
+        // Initialize lazy loading for new images
+        this.initializeLazyLoading();
+    }
+
+    loadMorePosts() {
+        if (this.isLoading || !this.hasMorePosts) return;
+
+        this.isLoading = true;
+        this.currentPage++;
+
+        // Show loading state
+        this.showLoadMoreLoading(true);
+
+        // Simulate network delay for better UX
+        setTimeout(() => {
+            const postsToDisplay = this.isSearchActive ? this.getSearchResults(this.searchTerm) : this.allPosts;
+            this.displayPosts(null); // Use stored posts, just advance page
+            
+            this.isLoading = false;
+            this.showLoadMoreLoading(false);
+        }, 300);
+    }
+
+    showLoadMoreLoading(show) {
+        const loadMoreBtn = document.getElementById('blogLoadMore');
+        const loadMoreLoading = document.getElementById('blogLoadMoreLoading');
+        
+        if (loadMoreBtn) loadMoreBtn.style.display = show ? 'none' : 'inline-flex';
+        if (loadMoreLoading) loadMoreLoading.style.display = show ? 'flex' : 'none';
+    }
+
+    updateLoadMoreButton() {
+        const loadMoreContainer = document.getElementById('blogLoadMoreContainer');
+        
+        if (loadMoreContainer) {
+            loadMoreContainer.style.display = this.hasMorePosts ? 'block' : 'none';
+        }
+    }
+
+    handleSearch(term) {
+        this.searchTerm = term;
+        this.isSearchActive = term.length >= blogConfig.searchMinChars;
+        
+        const searchResults = document.getElementById('blogSearchResults');
+        
+        if (this.isSearchActive) {
+            const results = this.getSearchResults(term);
+            this.displaySearchResults(results.length);
+            this.displayPosts(results);
+        } else {
+            // Show all posts when search is cleared
+            if (searchResults) searchResults.style.display = 'none';
+            this.displayPosts(this.allPosts);
+        }
+    }
+
+    getSearchResults(term) {
+        const lowerTerm = term.toLowerCase();
+        
+        return this.allPosts.filter(post => {
+            const titleMatch = post.title.toLowerCase().includes(lowerTerm);
+            const bodyMatch = post.body.toLowerCase().includes(lowerTerm);
+            return titleMatch || bodyMatch;
+        }).slice(0, blogConfig.maxSearchResults);
+    }
+
+    displaySearchResults(count) {
+        const searchResults = document.getElementById('blogSearchResults');
+        const searchCount = searchResults?.querySelector('.search-count');
+        
+        if (searchResults && searchCount) {
+            searchCount.textContent = `Found ${count} post${count !== 1 ? 's' : ''} matching "${this.searchTerm}"`;
+            searchResults.style.display = 'block';
+        }
+    }
+
     createPostHTML(post) {
         const date = post.createdAt ? this.formatDate(post.createdAt.toDate()) : 'Recent';
         const preview = this.createPreview(post.body, 200);
         const imageHTML = post.image ? 
-            `<img src="Images/${post.image}" alt="${this.escapeHtml(post.title)}" class="blog-post-image" loading="lazy">` : '';
+            `<img src="Images/${post.image}" alt="${this.escapeHtml(post.title)}" class="blog-post-image" loading="lazy" data-src="Images/${post.image}">` : '';
+
+        // Highlight search terms in title and content
+        const highlightedTitle = this.highlightSearchTerm(post.title);
+        const highlightedPreview = this.highlightSearchTerm(preview.text);
 
         return `
             <article class="blog-post" data-post-id="${post.id}">
                 <div class="blog-post-header">
-                    <h3 class="blog-post-title">${this.escapeHtml(post.title)}</h3>
+                    <h3 class="blog-post-title">${highlightedTitle}</h3>
                     <div class="blog-post-date">
                         <i class="fas fa-calendar-alt"></i>
                         ${date}
@@ -1109,10 +1325,10 @@ class PublicBlogViewer {
                 </div>
                 ${imageHTML}
                 <div class="blog-post-content">
-                    <div class="blog-preview">${preview.text}</div>
+                    <div class="blog-preview">${highlightedPreview}</div>
                     ${preview.hasMore ? `
                         <div class="blog-full-content" style="display: none;">
-                            ${this.formatContent(post.body)}
+                            ${this.highlightSearchTerm(this.formatContent(post.body))}
                         </div>
                         <a href="#" class="blog-read-more" data-action="expand">
                             Read More <i class="fas fa-arrow-right"></i>
@@ -1121,6 +1337,44 @@ class PublicBlogViewer {
                 </div>
             </article>
         `;
+    }
+
+    highlightSearchTerm(text) {
+        if (!this.isSearchActive || !this.searchTerm) return text;
+        
+        const regex = new RegExp(`(${this.escapeRegex(this.searchTerm)})`, 'gi');
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
+    }
+
+    escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    initializeLazyLoading() {
+        const images = document.querySelectorAll('.blog-post-image[data-src]');
+        
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        observer.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: `${blogConfig.lazyLoadOffset}px`
+            });
+
+            images.forEach(img => imageObserver.observe(img));
+        } else {
+            // Fallback for older browsers
+            images.forEach(img => {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            });
+        }
     }
 
     createPreview(content, maxLength) {
@@ -1160,9 +1414,10 @@ class PublicBlogViewer {
     }
 
     initializeReadMoreButtons() {
-        const readMoreButtons = document.querySelectorAll('.blog-read-more');
+        const readMoreButtons = document.querySelectorAll('.blog-read-more:not([data-initialized])');
         
         readMoreButtons.forEach(button => {
+            button.dataset.initialized = 'true';
             button.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.toggleReadMore(button);
@@ -1198,6 +1453,15 @@ class PublicBlogViewer {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Public method to refresh posts (useful after new post is published)
+    async refresh() {
+        await this.loadAllPosts();
+        this.currentPage = 0;
+        this.displayedPosts = [];
+        this.hasMorePosts = true;
+        this.displayPosts();
     }
 }
 

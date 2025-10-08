@@ -474,11 +474,38 @@
                 <p>Thoughts on talent acquisition, career insights, and industry perspectives</p>
             </div>
             <div class="blog-content">
+                <!-- Search Bar -->
+                <div class="blog-search-container">
+                    <div class="blog-search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="blogSearch" placeholder="Search posts..." class="blog-search-input">
+                        <button id="blogSearchClear" class="blog-search-clear" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="blog-search-results" id="blogSearchResults" style="display: none;">
+                        <span class="search-count"></span>
+                    </div>
+                </div>
+                
                 <div class="blog-loading" id="blogLoading">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Loading latest posts...</span>
                 </div>
                 <div class="blog-posts" id="blogPosts"></div>
+                
+                <!-- Load More Button -->
+                <div class="blog-load-more-container" id="blogLoadMoreContainer" style="display: none;">
+                    <button id="blogLoadMore" class="blog-load-more-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        Load More Posts
+                    </button>
+                    <div class="blog-load-more-loading" id="blogLoadMoreLoading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading more posts...</span>
+                    </div>
+                </div>
+                
                 <div class="blog-empty" id="blogEmpty" style="display: none;">
                     <i class="fas fa-feather-alt"></i>
                     <p>New insights coming soon! Check back for the latest thoughts on talent acquisition and career development.</p>
