@@ -98,7 +98,7 @@ If you have questions about our Cookie Policy:
 
 **Email:** [contact email]  
 **Phone:** [contact phone]  
-**Website:** [website URL]
+**Website:** [BenjaminNiccum.com](https://benjaminniccum.com/)
 
 ---
 

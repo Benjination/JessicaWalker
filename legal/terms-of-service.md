@@ -96,7 +96,7 @@ For questions about these Terms of Service, please contact:
 **Email:** [contact email]  
 **Phone:** [contact phone]  
 **Address:** [business address]
-
+<!-- Jess Info -->
 ---
 
 *These terms are designed for general use. For specific legal compliance, consult with an attorney.*

@@ -87,7 +87,7 @@ If you have questions about this disclaimer:
 **Email:** [contact email]  
 **Phone:** [contact phone]  
 **Address:** [business address]
-
+<!-- //Jess info -->
 ---
 
 *This disclaimer provides general protection. For specific legal requirements, consult with an attorney.*

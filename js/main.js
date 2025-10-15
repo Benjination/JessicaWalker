@@ -1728,6 +1728,108 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// ==========================================
+// CONTACT FORM HANDLING (FORMSPREE)
+// ==========================================
+class ContactFormManager {
+    constructor() {
+        this.form = document.getElementById('contact-form');
+        this.submitButton = document.getElementById('submit-button');
+        this.messagesDiv = document.getElementById('form-messages');
+        this.originalButtonContent = this.submitButton.innerHTML;
+        
+        this.init();
+    }
+    
+    init() {
+        if (this.form) {
+            this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        }
+    }
+    
+    async handleSubmit(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        this.setLoadingState(true);
+        this.hideMessages();
+        
+        try {
+            const formData = new FormData(this.form);
+            
+            // Submit to Formspree
+            const response = await fetch(this.form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                this.showSuccess();
+                this.form.reset();
+            } else {
+                const data = await response.json();
+                if (data.errors) {
+                    this.showError(data.errors.map(error => error.message).join(', '));
+                } else {
+                    this.showError('There was a problem submitting your form. Please try again.');
+                }
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            this.showError('There was a problem submitting your form. Please check your connection and try again.');
+        } finally {
+            this.setLoadingState(false);
+        }
+    }
+    
+    setLoadingState(loading) {
+        if (loading) {
+            this.submitButton.disabled = true;
+            this.submitButton.classList.add('loading');
+            this.submitButton.innerHTML = '<span>Sending...</span><i class="fas fa-spinner"></i>';
+        } else {
+            this.submitButton.disabled = false;
+            this.submitButton.classList.remove('loading');
+            this.submitButton.innerHTML = this.originalButtonContent;
+        }
+    }
+    
+    showSuccess() {
+        this.messagesDiv.className = 'form-messages success';
+        this.messagesDiv.innerHTML = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
+        this.messagesDiv.style.display = 'block';
+        this.scrollToMessages();
+    }
+    
+    showError(message) {
+        this.messagesDiv.className = 'form-messages error';
+        this.messagesDiv.innerHTML = `❌ ${message}`;
+        this.messagesDiv.style.display = 'block';
+        this.scrollToMessages();
+    }
+    
+    hideMessages() {
+        this.messagesDiv.style.display = 'none';
+    }
+    
+    scrollToMessages() {
+        setTimeout(() => {
+            this.messagesDiv.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 100);
+    }
+}
+
+// Initialize contact form when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    new ContactFormManager();
+});
+
 // Export legal functions for global access
 window.showLegalDocument = showLegalDocument;
 window.closeLegalModal = closeLegalModal;

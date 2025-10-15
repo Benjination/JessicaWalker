@@ -72,7 +72,7 @@ If you have questions about this Privacy Policy, please contact us:
 **Email:** [contact email]  
 **Phone:** [contact phone]  
 **Address:** [business address]
-
+<!-- Jess Info -->
 ---
 
 *This privacy policy is designed to comply with general privacy principles. For specific legal compliance, consult with a privacy attorney.*

@@ -580,7 +580,7 @@
                     </div>
                 </div>
                 <div class="contact-form">
-                    <form id="contact-form">
+                    <form id="contact-form" action="https://formspree.io/f/xjkajrjr" method="POST">
                         <div class="form-group">
                             <input type="text" id="name" name="name" placeholder="Your Name" required>
                         </div>
@@ -599,7 +599,14 @@
                         <div class="form-group">
                             <textarea id="message" name="message" placeholder="Tell me about your needs or goals..." rows="5" required></textarea>
                         </div>
-                        <button type="submit" class="submit-btn">
+                        
+                        <!-- Hidden honeypot field for spam protection -->
+                        <input type="text" name="_gotcha" style="display:none" />
+                        
+                        <!-- Success and error messages -->
+                        <div id="form-messages" class="form-messages" style="display: none;"></div>
+                        
+                        <button type="submit" class="submit-btn" id="submit-button">
                             <span>Send Message</span>
                             <i class="fas fa-paper-plane"></i>
                         </button>
