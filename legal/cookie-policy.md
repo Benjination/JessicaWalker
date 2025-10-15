@@ -96,8 +96,8 @@ By continuing to use our website, you consent to our use of cookies as described
 
 If you have questions about our Cookie Policy:
 
-**Email:** [contact email]  
-**Phone:** [contact phone]  
+**Email:** [Benjination2@gmail.com]
+**Phone:** [(682)552-0708]  
 **Website:** [BenjaminNiccum.com](https://benjaminniccum.com/)
 
 ---
